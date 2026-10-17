@@ -144,6 +144,17 @@ class KeepAliveService : Service() {
         return START_STICKY
     }
 
+    /**
+     * Android 15+：dataSync 类前台服务的每日配额耗尽时由系统回调。
+     * 不实现时系统会直接把服务停掉，START_STICKY 又拉起来、再撞一次配额，来回空转。
+     * 这里显式停掉，交给广播/系统去重新拉起。
+     */
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    override fun onTimeout(startId: Int) {
+        Log.w(TAG, "onTimeout: dataSync 前台服务配额耗尽，startId=$startId")
+        stopSelf(startId)
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
