@@ -6,15 +6,13 @@
 
 package me.rerere.rikkahub.data.ai.transformers
 
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import me.rerere.ai.core.MessageRole
 import me.rerere.ai.ui.UIMessage
 import me.rerere.ai.ui.UIMessagePart
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import kotlin.time.toJavaInstant
 
 /**
  * 给每条人类消息末尾附上它自己的发送时刻。
@@ -27,14 +25,12 @@ import kotlin.time.toJavaInstant
 object UserMessageTimeTransformer : InputMessageTransformer {
 
     private const val MARK = "user_message_time_projection"
-    private val FORMAT: DateTimeFormatter =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd EEE HH:mm:ss")
 
     override suspend fun transform(
         ctx: TransformerContext,
         messages: List<UIMessage>,
     ): List<UIMessage> {
-        val zone = ZoneId.systemDefault()
+        val zoneId = TimeZone.currentSystemDefault().id
         return messages.map { message ->
             if (message.role != MessageRole.USER) return@map message
 
@@ -42,13 +38,14 @@ object UserMessageTimeTransformer : InputMessageTransformer {
                 part is UIMessagePart.Text &&
                     (part.metadata?.get(MARK) as? JsonPrimitive)?.content?.toBoolean() == true
             }
+            // createdAt 是本地时间（LocalDateTime），形如 2026-10-16T23:00:05.503575
             val stamp = runCatching {
-                message.createdAt.toJavaInstant().atZone(zone).format(FORMAT)
-            }.getOrNull() ?: return@map message
+                message.createdAt.toString().substringBefore('.').replace('T', ' ')
+            }.getOrNull().let { if (it.isNullOrBlank()) return@map message else it }
 
             message.copy(
                 parts = cleaned + UIMessagePart.Text(
-                    text = "<user_message_time>这条消息发送于 $stamp（${zone.id}）。这是它的历史时点，不是现在。</user_message_time>",
+                    text = "<user_message_time>这条消息发送于 $stamp（$zoneId）。这是它的历史时点，不是现在。</user_message_time>",
                     metadata = buildJsonObject { put(MARK, true) },
                 )
             )
