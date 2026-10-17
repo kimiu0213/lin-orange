@@ -409,6 +409,8 @@ fun SettingSystemToolsPage(vm: SettingVM = koinViewModel()) {
             }
 
 
+            // Supabase 数据同步：记忆走 Serein，这块用不到，整段藏起来
+            if (false) {
             // Supabase 数据同步
             item {
             CardGroup(
@@ -545,6 +547,7 @@ fun SettingSystemToolsPage(vm: SettingVM = koinViewModel()) {
                         Text("需要先在 Supabase SQL Editor 中创建设备数据表。\n\n设备数据表：\ntimestamp (text), foreground_app (text), location_latitude (float), location_longitude (float), location_address (text), location_city (text), location_district (text), location_street (text), app_usage (text/jsonb), notifications (text/jsonb), device_event (text), health_data (jsonb)")
                     }
                 )
+            }
             }
             }
 
