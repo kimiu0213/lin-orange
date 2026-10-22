@@ -141,6 +141,7 @@ private val inputTransformers by lazy {
         OcrTransformer,
         VoiceMessageTransformer,
         UserMessageTimeTransformer,
+        TypingRhythmTransformer,
     )
 }
 
